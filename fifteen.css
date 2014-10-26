@@ -40,7 +40,10 @@ h1 {
 
 /* This class should be applied to each of the 15 puzzle pieces. */
 .puzzlepiece {
-	background-image: url(background.jpg);
+	background-image: url(background1.jpg);
+    background-image: url(background2.jpg);
+    background-image: url(background3.jpg);
+    background-image: url(background4.jpg);
 	border: 2px solid black;
 	height: 96px;
 	line-height: 96px;
