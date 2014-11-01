@@ -1,169 +1,262 @@
-var puzzle = [];
-var backPiece = [];
+"use strict";
+var div;
+var blink;
+var timer;
+var whiteSpaceY;
+var whiteSpaceX;
 
 
-window.onload = function() {
-    puzzle =  $$("#puzzlearea div");
-    var row = 0, right = 0, top = 0;
+window.onload = function ()
+{
+	var puzzlearea = document.getElementById('puzzlearea');
+    
+    var imgArray = ["url(background1.jpg)","url(background2.jpg)","url(background3.jpg)","url(background4.jpg)"];
+    var numOfImg = imgArray.length;
+  
+    var num=Math.floor((Math.random() * 3) + 1);
+    console.log (num);
+    alert(num);
 
-  for (var i=0;i<puzzle.length;i++){
-        puzzle[i].addClassName("puzzlepiece");
-        puzzle[i].style.float = "left";
-        puzzle[i].style.backgroundSize = "400px 400px";
-       
-       backPiece[i] = [];
-       backPiece[i][0] = right;
-       backPiece[i][1] = top;
+	div = puzzlearea.getElementsByTagName('div');
+    
+    
 
-       puzzle[i].style.backgroundPosition = "-"+backPiece[i][0]+"px -"+backPiece[i][1]+"px";
-       row ++;
-       if (row === 4){top += 100; right = 0; row = 0; } else {right +=100;}
-    }
+	for (var i=0; i<div.length; i++)
+	{
+		div[i].className = 'puzzlepiece';
+		div[i].style.left = (i%4*100)+'px';
+		div[i].style.top = (parseInt(i/4)*100) + 'px';
+		div[i].style.backgroundPosition= '-' + div[i].style.left + ' ' + '-' + div[i].style.top;
+        div[i].style.backgroundImage= "url(background"+num+".jpg)";
+		div[i].onmouseover = function()
+		{
+			if (checkCanMove(parseInt(this.innerHTML)))
+			{
+				this.style.border = "2px solid red";
+				this.style.color = "#006600";
+			}
+		};
+		div[i].onmouseout = function()
+		{
+			this.style.border = "2px solid black";
+			this.style.color = "#000000";
+		};
 
-  var freemove = document.createElement("div");
-   $("puzzlearea").appendChild(freemove); //add a div that acts as the free move 
-   blankP(freemove);
+		div[i].onclick = function()
+		{
+			if (checkCanMove(parseInt(this.innerHTML)))
+			{
+				swap(this.innerHTML-1);
+				if (checkFinish())
+				{
+					youWin();
+				}
+				return;
+			}
+		};
+	}
 
+	whiteSpaceX = '300px';
+	whiteSpaceY = '300px';
 
-   puzzle = $$("#puzzlearea div"); // "reassign" the array puzzle with the new div added
-   $("shufflebutton").observe('click', shufflePuzzle);
-   movepiece();
+	var shufflebutton = document.getElementById('shufflebutton');
+	shufflebutton.onclick = function()
+	{
+
+		for (var i=0; i<250; i++)
+		{
+			var rand = parseInt(Math.random()* 100) %4;
+			if (rand == 0)
+			{
+				var tmp = calcUp(whiteSpaceX, whiteSpaceY);
+				if ( tmp != -1)
+				{
+					swap(tmp);
+				}
+			}
+			if (rand == 1)
+			{
+				var tmp = calcDown(whiteSpaceX, whiteSpaceY);
+				if ( tmp != -1) 
+				{
+					swap(tmp);
+				}
+			}
+
+			if (rand == 2)
+			{
+				var tmp = calcLeft(whiteSpaceX, whiteSpaceY);
+				if ( tmp != -1)
+				{
+					swap(tmp);
+				}
+			}
+
+			if (rand == 3)
+			{
+				var tmp = calcRight(whiteSpaceX, whiteSpaceY);
+				if (tmp != -1)
+				{
+					swap(tmp);
+				}
+			}
+		}
+	};
 };
 
-// the function blankP is used to create the blank background for the space that represents the available move
-var blankP = function(el){
-  el.removeClassName("movablepiece");
-  el.addClassName("puzzlepiece");
-  el.style.float = "left";
-  el.style.backgroundImage = "none";
-  el.style.border = "2px solid white";
-};
+function checkCanMove(pos)
+{
+	if (calcLeft(whiteSpaceX, whiteSpaceY) == (pos-1))
+	{
+		return true;
+	}
 
-//the background_Position function is used to place the correct background piece to the number on the puzzlepiece.
-var background_Position = function(piece , item){
-  piece.style.backgroundPosition = "-"+backPiece[item-1][0]+"px -"+backPiece[item-1][1]+"px";
-};
+	if (calcDown(whiteSpaceX, whiteSpaceY) == (pos-1))
+	{
+		return true;
+	}
 
-// the regularP function is used to apply the background to a numbered piece. 
-var regularP = function(p){
-      p.addClassName("puzzlepiece");
-      p.style.border = "2px solid black";
-      p.style.backgroundImage = "url(background.jpg)";
-      p.style.backgroundSize = "400px 400px";
-};
+	if (calcUp(whiteSpaceX, whiteSpaceY) == (pos-1))
+	{
+		return true;
+	}
 
-//the shuffluePuzzle function is used to shullfe each puzzle on the page.
-function shufflePuzzle(){
-	var numArray = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-	for (var i=puzzle.length; i>0; i){
-		var j = Math.floor(Math.random() * i);
-		var x = numArray[--i];
-		var test = numArray[j];
-		if(test == "0") { 
-			puzzle[i].addClassName("puzzlepiece");
-	 		blankP(puzzle[i]);
-	 		puzzle[i].innerHTML = "";
-					}
-		else{
-     			puzzle[i].innerHTML = numArray[j];
-      			regularP(puzzle[i]);
-      			background_Position(puzzle[i], test);
-          }
-			numArray[j] = x;
-    }
-  	mopiece();
-   }
+	if (calcRight(whiteSpaceX, whiteSpaceY) == (pos-1))
+	{
+		return true;
+	}
+}
+function Blink()
+{
+	blink --;
+	if (blink == 0)
+	{
+		var body = document.getElementsByTagName('body');
+		body[0].style.backgroundColor = "#FFFFFF";
+		alert('you win');
+		return;
+	}
+	if (blink % 2)
+	{
+		var body = document.getElementsByTagName('body');
+		body[0].style.backgroundColor = "#00FF00";	
+	}
+	else
+	{
+		var body = document.getElementsByTagName('body');
+		body[0].style.backgroundColor = "#FF0000";
+	}
+	timer = setTimeout(Blink, 100);
+}
 
-//this function places the class movablepiece
-var movePA = function(piece){
-  puzzle[piece].addClassName("movablepiece");
-};
+function youWin()
+{
+	var body = document.getElementsByTagName('body');
+	body[0].style.backgroundColor = "#FF0000";
+	blink = 10;
+	timer = setTimeout(Blink, 100);
+}
 
-//the movepiece function is used to actually move the piece that is clicked on into the space.
-var movepiece = function(){
-    var move = this.innerHTML;
-    var yon = this.hasClassName('movablepiece');
-    var blank = 0;
-    if (yon){
-      	for (var i=0;i<puzzle.length;i++){
-        	blank = puzzle[i].innerHTML;
-         	if (puzzle[i].innerHTML == ""){
-          		puzzle[i].innerHTML = move;
-          		this.innerHTML = blank;
+function checkFinish()
+{
+	var flag = true;
+	for (var i = 0; i < div.length; i++) {
+		var y = parseInt(div[i].style.top);
+		var x = parseInt(div[i].style.left);
 
-          		regularP(puzzle[i]);
-          		blankP(this);
+		if (x != (i%4*100) || y != parseInt(i/4)*100)
+		{
+			flag = false;
+			break;
+		}
+	}
+	return flag;
+}
 
-        		 mopiece();
-        		 background_Position(puzzle[i], move);
-      }    
-     } 
-   }
-         };
+function calcLeft(x, y)
+{
+	var xx = parseInt(x);
+	var yy = parseInt(y);
 
-//the function mopiece is used to calculate which pieces are beside the space and are able to move, thus applying the 'movablepiece' class
-var mopiece = function(){
-	for (var i=0;i<puzzle.length;i++){
-		puzzle[i].removeClassName("movablepiece");	}
-		  for (var i=0; i<puzzle.length; i++){
-  			if (puzzle[i].innerHTML == ""){         
- 				  puzzle[i].removeClassName("movablepiece");
+	if (xx > 0)
+	{
+		for (var i = 0; i < div.length; i++) 
+		{
+			if (parseInt(div[i].style.left) + 100 == xx && parseInt(div[i].style.top) == yy)
+			{
+				return i;
+			} 
+		}
+	}
+	else 
+	{
+		return -1;
+	}
+}
 
-  				switch(i){
-  					case 0:
-  						movePA(i+1);
-  						movePA(i+4);
-              					break;
-  					case 1:
-  					case 2:
-  						movePA(i-1);
-  						movePA(i+1);
-        					movePA(i+4);
-  						break;
-  					case 3:
-  						movePA(i-1);
-  						movePA(i+4);
-  						break;
-  					case 4:
-  						movePA(i-4);
-  						movePA(i+4);
-  						movePA(i+1);
-  						break;
-  					case 5:
-  					case 6:
-  					case 9:
-  					case 10:
-  						movePA(i-4);
-  						movePA(i+4);
-  						movePA(i+1);
-  						movePA(i-1);
-              					break;
-  					case 7: 
-  					case 11:
-  						movePA(i-4);
-  						movePA(i+4);
-  						movePA(i-1);
-              					break;
-  					case 8:
-  						movePA(i-4);
-  						movePA(i+1);
-  						movePA(i+4);
-  						break;
-  					case 12:
-  						movePA(i-4);
-  						movePA(i+1);
-  						break;
-  					case 13: 
-  					case 14:
-  						movePA(i-4);
-  						movePA(i-1);
-  						movePA(i+1);
-  						break;
-  					case 15:
-  						movePA(i-4);
-  						movePA(i-1);
-  						break;
-  					}       	
-  		}
-      			puzzle[i].observe('click', movepiece); }  
-  	}	;
+function calcRight (x, y) {
+	var xx = parseInt(x);
+	var yy = parseInt(y);
+	if (xx < 300)
+	{
+		for (var i =0; i<div.length; i++){
+			if (parseInt(div[i].style.left) - 100 == xx && parseInt(div[i].style.top) == yy) 
+			{
+				return i;
+			}
+		}
+	}
+	else
+	{
+		return -1;
+	} 
+}
+
+function calcUp (x, y) {
+	var xx = parseInt(x);
+	var yy = parseInt(y);
+	if (yy > 0)
+	{
+		for (var i=0; i<div.length; i++)
+		{
+			if (parseInt(div[i].style.top) + 100 == yy && parseInt(div[i].style.left) == xx) 
+			{
+				return i;
+			}
+		} 
+	}
+	else 
+	{
+		return -1;
+	}
+}
+
+function calcDown (x, y)
+{
+	var xx = parseInt(x);
+	var yy = parseInt(y);
+	if (yy < 300)
+	{
+		for (var i=0; i<div.length; i++)
+		{
+			if (parseInt(div[i].style.top) - 100 == yy && parseInt(div[i].style.left) == xx) 
+			{
+				return i;
+			}
+		}
+	}
+	else
+	{
+		return -1;
+	} 
+}
+
+function swap (pos) {
+	var temp = div[pos].style.top;
+	div[pos].style.top = whiteSpaceY;
+	whiteSpaceY = temp;
+
+	temp = div[pos].style.left;
+	div[pos].style.left = whiteSpaceX;
+	whiteSpaceX = temp;
+}
